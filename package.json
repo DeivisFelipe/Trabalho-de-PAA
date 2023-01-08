@@ -1,0 +1,22 @@
+{
+  "name": "trabalho-de-paa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mochila-booleana.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DeivisFelipe/Trabalho-de-PAA.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DeivisFelipe/Trabalho-de-PAA/issues"
+  },
+  "homepage": "https://github.com/DeivisFelipe/Trabalho-de-PAA#readme",
+  "dependencies": {
+    "vivagraphjs": "^0.12.0"
+  }
+}

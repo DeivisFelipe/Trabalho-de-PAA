@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>VivaGraphs constant layout demo page</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vivagraphjs/0.12.0/vivagraph.js"
+        integrity="sha512-3tTesD60C/wb78n0v+VF0gQmyhhx9HUhvqomOHjxU2cxdONsdVUszz+5eNGsU1G9NYv/HDLpJ/ysXQmet+Ot7A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript">
+        function kruskal() {
+            let nos = [{
+                nome: "a",
+                grupo: null,
+            }, {
+                nome: "b",
+                grupo: null,
+            }, {
+                nome: "c",
+                grupo: null,
+            }, {
+                nome: "d",
+                grupo: null,
+            }, {
+                nome: "e",
+                grupo: null,
+            }, {
+                nome: "f",
+                grupo: null,
+            }, {
+                nome: "g",
+                grupo: null,
+            }, {
+                nome: "h",
+                grupo: null,
+            }, {
+                nome: "i",
+                grupo: null,
+            }]
+            let arestas = [
+                ["a", "b", 4],
+                ["b", "c", 8],
+                ["c", "d", 7],
+                ["d", "e", 9],
+                ["e", "f", 10],
+                ["f", "g", 2],
+                ["g", "h", 1],
+                ["h", "i", 7],
+                ["a", "h", 8],
+                ["b", "h", 11],
+                ["c", "i", 2],
+                ["c", "f", 4],
+                ["d", "f", 14],
+                ["g", "i", 6]
+            ];
+
+            let caminho = [];
+            let custo = 0;
+
+            arestas.sort(function (a, b) {
+                return a[2] - b[2];
+            });
+
+            for (let i = 0; i < arestas.length; i++) {
+                let aresta = arestas[i];
+                let no1 = aresta[0];
+                let no2 = aresta[1];
+                let peso = aresta[2];
+
+                no1 = nos.find(function (no) {
+                    return no.nome == no1;
+                });
+                no2 = nos.find(function (no) {
+                    return no.nome == no2;
+                });
+
+                if (no1.grupo == null && no2.grupo == null) {
+                    no1.grupo = no1;
+                    no2.grupo = no1;
+                    custo += peso;
+                } else if (no1.grupo == null) {
+                    no1.grupo = no2.grupo;
+                    custo += peso;
+                } else if (no2.grupo == null) {
+                    no2.grupo = no1.grupo;
+                    custo += peso;
+                } else if (no1.grupo != no2.grupo) {
+                    let grupo1 = no1.grupo;
+                    let grupo2 = no2.grupo;
+                    nos.forEach(function (no) {
+                        if (no.grupo == grupo2) {
+                            no.grupo = grupo1;
+                        }
+                    });
+                    custo += peso;
+                } else {
+                    continue;
+                }
+                caminho.push(aresta);
+                if (i == 5) {
+                    return caminho
+                }
+            }
+
+            console.log("Custo: ", custo);
+            return caminho;
+        }
+        let caminho = kruskal();
+        function main() {
+
+            let graphics = Viva.Graph.View.svgGraphics();
+
+            // we will use SVG patterns to fill circle with image brush:
+            // http://stackoverflow.com/questions/11496734/add-a-background-image-png-to-a-svg-circle-shape
+            let defs = Viva.Graph.svg('defs');
+            graphics.getSvgRoot().append(defs);
+
+            graphics.node(createNodeWithImage)
+                .placeNode(placeNodeWithTransform);
+
+            graphics.link(function (link) {
+                var radius = 12;
+                var text = Viva.Graph.svg('text')
+                    .attr('font-size', radius)
+                    .attr('fill', 'black')
+                    .text(link.data);
+
+                // now create actual node and reference created fill pattern:
+
+                let temCaminho = caminho.find(function (caminho) {
+                    return (caminho[0] == link.fromId && caminho[1] == link.toId) || (caminho[0] == link.toId && caminho[1] == link.fromId);
+                });
+                var ui = Viva.Graph.svg('g');
+                let path = Viva.Graph.svg('path')
+                    .attr('stroke', 'blue')
+
+                if (temCaminho) {
+                    path.attr('stroke', 'orange').attr('stroke-width', 3)
+                } else {
+                    path.attr('stroke-dasharray', '5, 5')
+                }
+                ui.append(path);
+                ui.append(text);
+                return ui;
+            }).placeLink(function (linkUI, fromPos, toPos) {
+                let path = linkUI.children[0]
+                let text = linkUI.children[1]
+                // linkUI - is the object returend from link() callback above.
+                var data = 'M' + fromPos.x + ',' + fromPos.y +
+                    'L' + toPos.x + ',' + toPos.y;
+
+                text.attr('x', (fromPos.x + toPos.x) / 2)
+                    .attr('y', (fromPos.y + toPos.y) / 2)
+                    .attr('font-size', 19)
+
+                // 'Path data' (http://www.w3.org/TR/SVG/paths.html#DAttribute )
+                // is a common way of rendering paths in SVG:
+                path.attr("d", data);
+            });
+
+            var graph = constructGraph();
+            var renderer = Viva.Graph.View.renderer(graph, {
+                graphics: graphics,
+                container: document.getElementById('graph-container')
+            });
+
+            renderer.run();
+
+            function createNodeWithImage(node) {
+                var radius = 12;
+                var text = Viva.Graph.svg('text')
+                    .attr('x', radius - 3)
+                    .attr('y', radius + 3)
+                    .attr('font-size', radius)
+                    .attr('fill', 'white')
+                    .text(node.data);
+
+                // now create actual node and reference created fill pattern:
+                var ui = Viva.Graph.svg('g');
+                var circle = Viva.Graph.svg('circle')
+                    .attr('cx', radius)
+                    .attr('cy', radius)
+                    .attr('fill', 'red')
+                    .attr('stroke', 'black')
+                    .attr('r', radius);
+
+                ui.append(circle);
+                ui.append(text);
+                return ui;
+            }
+
+            function placeNodeWithTransform(nodeUI, pos) {
+                // Shift image to let links go to the center:
+                nodeUI.attr('transform', 'translate(' + (pos.x - 12) + ',' + (pos.y - 12) + ')');
+            }
+
+
+        }
+
+
+        function constructGraph() {
+            var graph = Viva.Graph.graph();
+
+            graph.addNode('a', "A");
+            graph.addNode('b', "B");
+            graph.addNode('c', "C");
+            graph.addNode('d', "D");
+            graph.addNode('e', "E");
+            graph.addNode('f', "F");
+            graph.addNode('g', "G");
+            graph.addNode('h', "H");
+            graph.addNode('i', "I");
+
+            graph.addLink('a', 'b', 4);
+            graph.addLink('b', 'c', 8);
+            graph.addLink('c', 'd', 7);
+            graph.addLink('d', 'e', 9);
+            graph.addLink('e', 'f', 10);
+            graph.addLink('f', 'g', 2);
+            graph.addLink('g', 'h', 1);
+            graph.addLink('h', 'i', 7);
+            graph.addLink('a', 'h', 8);
+            graph.addLink('b', 'h', 11);
+            graph.addLink('c', 'i', 2);
+            graph.addLink('c', 'f', 4);
+            graph.addLink('d', 'f', 14);
+            graph.addLink('g', 'i', 6);
+
+            return graph;
+        }
+
+    </script>
+
+    <style type="text/css" media="screen">
+        body,
+        html,
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body onload="main()">
+
+</body>
+
+</html>
