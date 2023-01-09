@@ -42,9 +42,9 @@ console.log(melhorSolucaoRecursao);
 console.log("Função Dinâmica - Chamadas da função: " + totalVezesDinamica);
 console.log(melhorSolucaoDinamica);
 
-function mochilaBooleanaRecursao(indice, pesoMaximo) {
+function mochilaBooleanaRecursao(indice, pesoMaximoLocal) {
   // Caso base
-  if (indice === -1 || pesoMaximo === 0) {
+  if (indice === -1 || pesoMaximoLocal === 0) {
     return {
       itens: [],
       peso: 0,
@@ -54,7 +54,7 @@ function mochilaBooleanaRecursao(indice, pesoMaximo) {
 
   totalVezesRecursao++;
   /*console.log(
-    "Recursão: " + ++totalVezesRecursao + " - " + indice + " - " + pesoMaximo
+    "Recursão: " + ++totalVezesRecursao + " - " + indice + " - " + pesoMaximoLocal
   );*/
 
   // Caso recursivo
@@ -63,20 +63,20 @@ function mochilaBooleanaRecursao(indice, pesoMaximo) {
   let item = itens[indice];
 
   // Verifica se o peso do item atual é maios que o pesso máximo da seção da mochila
-  if (item.peso > pesoMaximo) {
+  if (item.peso > pesoMaximoLocal) {
     // Se for, não coloca o item na mochila
-    return mochilaBooleanaRecursao(indice - 1, pesoMaximo);
+    return mochilaBooleanaRecursao(indice - 1, pesoMaximoLocal);
   }
 
   let solucaoComItem = mochilaBooleanaRecursao(
     indice - 1,
-    pesoMaximo - item.peso
+    pesoMaximoLocal - item.peso
   );
   solucaoComItem.itens.push(item);
   solucaoComItem.peso += item.peso;
   solucaoComItem.eficiencia += item.eficiencia;
 
-  let solucaoSemItem = mochilaBooleanaRecursao(indice - 1, pesoMaximo);
+  let solucaoSemItem = mochilaBooleanaRecursao(indice - 1, pesoMaximoLocal);
 
   if (solucaoComItem.eficiencia > solucaoSemItem.eficiencia) {
     return solucaoComItem;
@@ -85,9 +85,9 @@ function mochilaBooleanaRecursao(indice, pesoMaximo) {
   }
 }
 
-function mochilaBooleanaDinamica(indice, pesoMaximo) {
+function mochilaBooleanaDinamica(indice, pesoMaximoLocal) {
   // Caso base
-  if (indice === -1 || pesoMaximo === 0) {
+  if (indice === -1 || pesoMaximoLocal === 0) {
     return {
       itens: [],
       peso: 0,
@@ -95,47 +95,48 @@ function mochilaBooleanaDinamica(indice, pesoMaximo) {
     };
   }
 
+  if (matrixDinamica[indice][pesoMaximoLocal]) {
+    return copiaObjeto(matrixDinamica[indice][pesoMaximoLocal]);
+  }
+
   totalVezesDinamica++;
-  /*console.log(
-    "Dinâmica: " + ++totalVezesDinamica + " - " + indice + " - " + pesoMaximo
-  );*/
 
   // Caso recursivo
 
   // Pega o item no índice atual
   let item = itens[indice];
 
-  // Verifica se o peso do item atual é maios que o pesso máximo da seção da mochila
-  if (item.peso > pesoMaximo) {
+  let solucaoSemItem = mochilaBooleanaDinamica(indice - 1, pesoMaximoLocal);
+
+  let solucaoComItem;
+  if (item.peso > pesoMaximoLocal) {
     // Se for, não coloca o item na mochila
-    return mochilaBooleanaDinamica(indice - 1, pesoMaximo);
-  }
-
-  let solucaoComItem = mochilaBooleanaDinamica(
-    indice - 1,
-    pesoMaximo - item.peso
-  );
-  solucaoComItem.itens.push(item);
-  solucaoComItem.peso += item.peso;
-  solucaoComItem.eficiencia += item.eficiencia;
-
-  matrixDinamica[indice][pesoMaximo] = solucaoComItem;
-
-  let solucaoSemItem;
-
-  if (
-    indice === 0 ||
-    pesoMaximo === 0 ||
-    !matrixDinamica[indice - 1][pesoMaximo]
-  ) {
-    solucaoSemItem = mochilaBooleanaDinamica(indice - 1, pesoMaximo);
+    solucaoComItem = {
+      itens: [],
+      peso: 0,
+      eficiencia: 0,
+    };
   } else {
-    solucaoSemItem = matrixDinamica[indice - 1][pesoMaximo];
+    solucaoComItem = mochilaBooleanaDinamica(
+      indice - 1,
+      pesoMaximoLocal - item.peso
+    );
+    solucaoComItem.itens.push(copiaObjeto(item));
+    solucaoComItem.peso += item.peso;
+    solucaoComItem.eficiencia += item.eficiencia;
   }
 
+  let retorno;
   if (solucaoComItem.eficiencia > solucaoSemItem.eficiencia) {
-    return solucaoComItem;
+    matrixDinamica[indice][pesoMaximoLocal] = copiaObjeto(solucaoComItem);
+    retorno = solucaoComItem;
   } else {
-    return solucaoSemItem;
+    matrixDinamica[indice][pesoMaximoLocal] = copiaObjeto(solucaoSemItem);
+    retorno = solucaoSemItem;
   }
+  return retorno;
+}
+
+function copiaObjeto(objeto) {
+  return JSON.parse(JSON.stringify(objeto));
 }
